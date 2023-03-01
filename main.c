@@ -5,7 +5,7 @@
 // #define PREPARE_DATA
 #define RUN_CGP
 
-#define ADDER_SIZE 4
+#define ADDER_SIZE 3
 #define NUM_SAMPLES 40320
 
 #define NUM_INPUTS ADDER_SIZE * 2  // 8
@@ -119,7 +119,7 @@ int main(void)
 
     setUpdateFrequency(params, updateFrequency);
 
-    setNumThreads(params, 6);
+    setNumThreads(params, 12);
 
     printParameters(params);
 
