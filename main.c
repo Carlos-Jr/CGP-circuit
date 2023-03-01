@@ -2,8 +2,11 @@
 #include <math.h>
 #include "cgp.h"
 
+// #define PREPARE_DATA
+#define RUN_CGP
+
 #define ADDER_SIZE 4
-#define NUM_SAMPLES 16
+#define NUM_SAMPLES 40320
 
 #define NUM_INPUTS ADDER_SIZE * 2  // 8
 #define NUM_OUTPUTS ADDER_SIZE + 1 // 5
@@ -39,20 +42,38 @@ double outputs[NUM_SAMPLES][NUM_OUTPUTS];
 
 void generateAdder()
 {
-    for (int n = 0; n < NUM_SAMPLES; n++)
+    int linha = 0;
+    int maxN = pow(2, ADDER_SIZE);
+    for (int nA = 0; nA < maxN; nA++)
     {
-        for (int i = 0; i < NUM_INPUTS / 2; i++)
+        for (int nB = nA; nB < maxN; nB++)
         {
+            printf("%d (", nA);
             // Entrada A
-            inputs[n][i] = n >> i & 1;
-            printf("[%d][%d]:%d", n, i, inputs[n][i]);
+            for (int i = 0; i < NUM_INPUTS / 2; i++)
+            {
+                int bitInA = (nA >> ((NUM_INPUTS / 2) - i - 1)) & 1;
+                inputs[linha][i] = (double)bitInA;
+                printf("%d", (int)inputs[linha][i]);
+            }
+            printf(") + %d (", nB);
             // Entrada B
-            inputs[n][i + NUM_INPUTS / 2] = n >> i & 1;
-        }
-        int calcOut = n * 2;
-        for (int i = 0; i < NUM_OUTPUTS; i++)
-        {
-            outputs[n][i] = calcOut >> i & 1;
+            for (int i = 0; i < NUM_INPUTS / 2; i++)
+            {
+                int bitInB = (nB >> ((NUM_INPUTS / 2) - i - 1)) & 1;
+                inputs[linha][i + NUM_INPUTS / 2] = (double)bitInB;
+                printf("%d", (int)inputs[linha][i + NUM_INPUTS / 2]);
+            }
+            int calcOut = nA + nB;
+            printf(") = %d (", calcOut);
+            for (int i = 0; i < NUM_OUTPUTS; i++)
+            {
+                int bitInOut = (calcOut >> NUM_OUTPUTS - i - 1) & 1;
+                outputs[linha][i] = (double)bitInOut;
+                printf("%d", (int)outputs[linha][i]);
+            }
+            printf(")\n");
+            linha++;
         }
     }
 }
@@ -62,16 +83,18 @@ int main(void)
     /////////////////////
     // PREPARA O DATASET
     /////////////////////
+#ifdef PREPARE_DATA
     int i;
     struct dataSet *data = NULL;
     generateAdder();
     data = initialiseDataSetFromArrays(NUM_INPUTS, NUM_OUTPUTS, NUM_SAMPLES, inputs[0], outputs[0]);
     saveDataSet(data, "symbolic.data");
     freeDataSet(data);
-
+#endif
     /////////////////////
     // RODAR O CGP
     /////////////////////
+#ifdef RUN_CGP
 
     struct parameters *params = NULL;
     struct dataSet *trainingData = NULL;
@@ -84,7 +107,7 @@ int main(void)
 
     int numGens = 10000;
     int updateFrequency = 500;
-    double targetFitness = 0.1;
+    double targetFitness = 1;
 
     params = initialiseParameters(numInputs, numNodes, numOutputs, nodeArity);
 
@@ -95,6 +118,8 @@ int main(void)
     setTargetFitness(params, targetFitness);
 
     setUpdateFrequency(params, updateFrequency);
+
+    setNumThreads(params, 6);
 
     printParameters(params);
 
@@ -110,6 +135,6 @@ int main(void)
     freeDataSet(trainingData);
     freeChromosome(chromo);
     freeParameters(params);
-
+#endif
     return 0;
 }
