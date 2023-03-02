@@ -1,41 +1,21 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "cgp.h"
 
-// #define PREPARE_DATA
+#define PREPARE_DATA
 #define RUN_CGP
 
-#define ADDER_SIZE 3
-#define NUM_SAMPLES 40320
+#define NUM_NODES 300
+#define MUTATION_RATE 0.05
+#define MAX_GENERATIONS 50000
+
+#define ADDER_SIZE 4
+#define NUM_SAMPLES 16 * 16
 
 #define NUM_INPUTS ADDER_SIZE * 2  // 8
 #define NUM_OUTPUTS ADDER_SIZE + 1 // 5
-#define MAX_INPUTS_PER_GATE 2
-
-double andFunction(const int numInputs, const double *inputs, const double *connectionWeights)
-{
-    double output = 1;
-    for (int i = 0; i < numInputs; i++)
-    {
-        output *= inputs[i];
-    }
-    return output;
-}
-double orFunction(const int numInputs, const double *inputs, const double *connectionWeights)
-{
-    double output = 0;
-    for (int i = 0; i < numInputs; i++)
-    {
-        output += inputs[i];
-    }
-    if (output > 1)
-        output = 1;
-    return output;
-}
-double notFunction(const int numInputs, const double *inputs, const double *connectionWeights)
-{
-    return inputs[0] > 0 ? 0 : 1;
-}
+#define MAX_INPUTS_PER_GATE 3
 
 double inputs[NUM_SAMPLES][NUM_INPUTS];
 double outputs[NUM_SAMPLES][NUM_OUTPUTS];
@@ -46,9 +26,9 @@ void generateAdder()
     int maxN = pow(2, ADDER_SIZE);
     for (int nA = 0; nA < maxN; nA++)
     {
-        for (int nB = nA; nB < maxN; nB++)
+        for (int nB = 0; nB < maxN; nB++)
         {
-            printf("%d (", nA);
+            printf("%d >> %d (", linha, nA);
             // Entrada A
             for (int i = 0; i < NUM_INPUTS / 2; i++)
             {
@@ -78,6 +58,39 @@ void generateAdder()
     }
 }
 
+double majority(const int numInputs, const double *inputs, const double *connectionWeights)
+{
+    int nHighs = 0;
+
+    for (int i = 0; i < numInputs; i++)
+    {
+        if (inputs[i] > 0)
+            nHighs++;
+        if (nHighs > (numInputs / 2))
+            return 1.0;
+    }
+    return 0.0;
+}
+
+double checkTruthTable(struct parameters *params, struct chromosome *chromo, struct dataSet *data)
+{
+    double linesErrors = 0;
+    for (int i = 0; i < getNumDataSetSamples(data); i++)
+    {
+        int errors = 0;
+        executeChromosome(chromo, getDataSetSampleInputs(data, i));
+
+        for (int j = 0; j < getNumChromosomeOutputs(chromo); j++)
+        {
+            if (getDataSetSampleOutput(data, i, j) != getChromosomeOutput(chromo, j))
+                errors += 1;
+        }
+        if (errors > 0)
+            linesErrors += 1;
+    }
+    return linesErrors;
+}
+
 int main(void)
 {
     /////////////////////
@@ -100,32 +113,28 @@ int main(void)
     struct dataSet *trainingData = NULL;
     struct chromosome *chromo = NULL;
 
-    int numInputs = NUM_INPUTS;
-    int numNodes = 15;
-    int numOutputs = NUM_OUTPUTS;
-    int nodeArity = 2;
+    params = initialiseParameters(NUM_INPUTS, NUM_NODES, NUM_OUTPUTS, MAX_INPUTS_PER_GATE);
 
-    int numGens = 10000;
-    int updateFrequency = 500;
-    double targetFitness = 1;
+    addNodeFunction(params, "and,nand,or,nor,not,xor,xand");
+    addCustomNodeFunction(params, majority, "maj", -1);
+    setTargetFitness(params, 1);
+    setCustomFitnessFunction(params, checkTruthTable, "CTT");
 
-    params = initialiseParameters(numInputs, numNodes, numOutputs, nodeArity);
-
-    addCustomNodeFunction(params, andFunction, "and", MAX_INPUTS_PER_GATE);
-    addCustomNodeFunction(params, orFunction, "or", MAX_INPUTS_PER_GATE);
-    addCustomNodeFunction(params, notFunction, "not", 1);
-
-    setTargetFitness(params, targetFitness);
-
-    setUpdateFrequency(params, updateFrequency);
-
+    setEvolutionaryStrategy(params, '+');
+    setMu(params, 5);      // The number of parents selected each iteration.
+    setLambda(params, 20); // Size of the population.
+    // lambda / mu: Number of children generated from each selected parent.
+    // (mu, lambda)-ES: A version of evolution strategies where children replace parents.
+    // (mu + lambda)-ES: A version of evolution strategies where children and parents are added to the population.
+    setMutationRate(params, MUTATION_RATE);
+    setUpdateFrequency(params, 500);
     setNumThreads(params, 12);
 
     printParameters(params);
 
     trainingData = initialiseDataSetFromFile("symbolic.data");
 
-    chromo = runCGP(params, trainingData, numGens);
+    chromo = runCGP(params, trainingData, MAX_GENERATIONS);
 
     removeInactiveNodes(chromo);
     printChromosome(chromo, 0);

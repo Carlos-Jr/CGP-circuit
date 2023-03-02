@@ -1,12 +1,14 @@
 \documentclass{article}
 \begin{document}
 \begin{equation}
-f_0(x_0,x_1,x_2,x_3,x_4,x_5)=or(x_0, and(and(x_4, x_3), or(not(not(x_1)), and(x_5, x_2))))
+f_0(x_0,x_1,x_2,x_3,x_4,x_5,x_6,x_7)=not(not(x_0))
 \end{equation}\begin{equation}
-f_1(x_0,x_1,x_2,x_3,x_4,x_5)=or(x_3, not(not(x_1)))
+f_1(x_0,x_1,x_2,x_3,x_4,x_5,x_6,x_7)=nor(nor(x_4, not(x_0)), or(maj(and(maj(nand(x_1, x_5), and(x_6, x_2)), not(nand(x_3, x_7))), nand(x_3, x_7)), maj(or(nor(x_1, x_5), maj(xor(nor(x_1, x_5), xor(or(and(x_6, x_2), not(nand(x_3, x_7))), nand(x_1, x_5))), nand(x_1, x_5))), xor(not(x_0), x_4))))
 \end{equation}\begin{equation}
-f_2(x_0,x_1,x_2,x_3,x_4,x_5)=or(and(not(x_1), x_4), and(x_5, x_2))
+f_2(x_0,x_1,x_2,x_3,x_4,x_5,x_6,x_7)=xor(nor(x_1, x_5), xor(or(and(x_6, x_2), not(nand(x_3, x_7))), nand(x_1, x_5)))
 \end{equation}\begin{equation}
-f_3(x_0,x_1,x_2,x_3,x_4,x_5)=and(not(x_2), x_5)
+f_3(x_0,x_1,x_2,x_3,x_4,x_5,x_6,x_7)=xor(maj(not(x_2), not(x_2)), xor(not(x_6), not(nand(x_3, x_7))))
+\end{equation}\begin{equation}
+f_4(x_0,x_1,x_2,x_3,x_4,x_5,x_6,x_7)=xor(x_3, x_7)
 \end{equation}
 \end{document}
