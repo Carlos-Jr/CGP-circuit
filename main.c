@@ -7,11 +7,11 @@
 #define RUN_CGP
 
 #define NUM_NODES 300
-#define MUTATION_RATE 0.05
-#define MAX_GENERATIONS 50000
+#define MUTATION_RATE 1
+#define MAX_GENERATIONS 100000
 
-#define ADDER_SIZE 4
-#define NUM_SAMPLES 16 * 16
+#define ADDER_SIZE 3
+#define NUM_SAMPLES 8 * 8
 
 #define NUM_INPUTS ADDER_SIZE * 2  // 8
 #define NUM_OUTPUTS ADDER_SIZE + 1 // 5
@@ -115,18 +115,19 @@ int main(void)
 
     params = initialiseParameters(NUM_INPUTS, NUM_NODES, NUM_OUTPUTS, MAX_INPUTS_PER_GATE);
 
-    addNodeFunction(params, "and,nand,or,nor,not,xor,xand");
+    addNodeFunction(params, "and,nand,or,nor,not");
     addCustomNodeFunction(params, majority, "maj", -1);
-    setTargetFitness(params, 1);
+    setTargetFitness(params, 0);
     setCustomFitnessFunction(params, checkTruthTable, "CTT");
 
-    setEvolutionaryStrategy(params, '+');
-    setMu(params, 5);      // The number of parents selected each iteration.
-    setLambda(params, 20); // Size of the population.
+    setMu(params, 1);     // The number of parents selected each iteration.
+    setLambda(params, 4); // Size of the population.
     // lambda / mu: Number of children generated from each selected parent.
+    setEvolutionaryStrategy(params, '+');
     // (mu, lambda)-ES: A version of evolution strategies where children replace parents.
     // (mu + lambda)-ES: A version of evolution strategies where children and parents are added to the population.
-    setMutationRate(params, MUTATION_RATE);
+    // setMutationRate(params, MUTATION_RATE);
+    setMutationType(params, "single");
     setUpdateFrequency(params, 500);
     setNumThreads(params, 12);
 
