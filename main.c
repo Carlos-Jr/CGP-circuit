@@ -1,3 +1,4 @@
+// gcc main.c cgp.c cgp.h -lm -fopenmp -o out && time ./out && dot -Tpdf chromo.dot -o chromo.pdf
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
