@@ -2,21 +2,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "cgp.h"
+#include "lib/cgp.h"
 
 #define PREPARE_DATA
 #define RUN_CGP
 
-#define NUM_NODES 300
-#define MUTATION_RATE 1
-#define MAX_GENERATIONS 100000
+#define NUM_NODES 50
+#define MUTATION_RATE 0.025
+#define MAX_GENERATIONS 1000000
 
 #define ADDER_SIZE 3
 #define NUM_SAMPLES 8 * 8
 
 #define NUM_INPUTS ADDER_SIZE * 2  // 8
 #define NUM_OUTPUTS ADDER_SIZE + 1 // 5
-#define MAX_INPUTS_PER_GATE 3
+#define MAX_INPUTS_PER_GATE 2
 
 double inputs[NUM_SAMPLES][NUM_INPUTS];
 double outputs[NUM_SAMPLES][NUM_OUTPUTS];
@@ -102,7 +102,7 @@ int main(void)
     struct dataSet *data = NULL;
     generateAdder();
     data = initialiseDataSetFromArrays(NUM_INPUTS, NUM_OUTPUTS, NUM_SAMPLES, inputs[0], outputs[0]);
-    saveDataSet(data, "symbolic.data");
+    saveDataSet(data, "TruthTable.data");
     freeDataSet(data);
 #endif
     /////////////////////
@@ -116,8 +116,8 @@ int main(void)
 
     params = initialiseParameters(NUM_INPUTS, NUM_NODES, NUM_OUTPUTS, MAX_INPUTS_PER_GATE);
 
-    addNodeFunction(params, "and,nand,or,nor,not");
-    addCustomNodeFunction(params, majority, "maj", -1);
+    addNodeFunction(params, "and,nand,or,nor,not,xor");
+    // addCustomNodeFunction(params, majority, "maj", -1);
     setTargetFitness(params, 0);
     setCustomFitnessFunction(params, checkTruthTable, "CTT");
 
@@ -134,7 +134,7 @@ int main(void)
 
     printParameters(params);
 
-    trainingData = initialiseDataSetFromFile("symbolic.data");
+    trainingData = initialiseDataSetFromFile("TruthTable.data");
 
     chromo = runCGP(params, trainingData, MAX_GENERATIONS);
 
